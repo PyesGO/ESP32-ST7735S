@@ -1,5 +1,4 @@
-#ifndef TFT_DRIVER_H
-#define TFT_DRIVER_H
+#pragma once
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -17,4 +16,3 @@ timesleep(unsigned int ms) {
 /*
 File: TFT_DRIVER_H
 */
-#endif
