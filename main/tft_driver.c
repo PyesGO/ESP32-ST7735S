@@ -1,13 +1,21 @@
 #include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
-#define RST 3
-#define DXL 4
-#define CSX 5
+#include "tft_driver.h"
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 128
 
 static void
-init(void) {
-            
+spi_init(ScreenPins *scp) {
+    unsigned char count, *scp_pt;
+
+    scp_pt = (unsigned char *)scp;
+
+    for (count = 0; count < PIN_NUM; ++count)
+        gpio_set_direction( *(scp_pt++), GPIO_MODE_OUTPUT );
+    
+    gpio_set_level(scp->RES, 1);
+    timesleep(200);
+    gpio_set_level(scp->RES, 0);
+    timesleep(20);
 }
