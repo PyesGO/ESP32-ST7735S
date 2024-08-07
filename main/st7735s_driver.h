@@ -1,5 +1,4 @@
-#ifndef ST7735S_DRIVER_H
-#define ST7735S_DRIVER_H
+#pragma once
 
 // System function command list:
 #define ST7735S_NOP 0x00
@@ -58,19 +57,26 @@
 #define ST7735S_NVCTR1 0xD9
 #define ST7735S_NVCTR2 0xDE
 #define ST7735S_NVCTR3 0xDF
+#define ST7735S_GMCTRP1 0xE0
+#define ST7735S_GMCTRN1 0xE1
+#define ST7735S_GCV 0xFC
 // Done.
 
 typedef struct {
-    unsigned char SCL, SDA, RES, DC, CS;
-} st7735_pins;
-#define PIN_NUM 5
+    unsigned char SCL, SDA, RES, DC, CS, BLK;
+} st7735s_pins;
+#define ST7735S_PIN_COUNT(pins_struct) sizeof(pins_struct) / sizeof(unsigned char)
 
-void st7735s_init(st7735_pins *pins);
-void st7735s_write_bytes(st7735_pins *pins, unsigned char bytes);
-void st7735s_write_data(st7735_pins *pins, unsigned char data);
-void st7735s_write_command(st7735_pins *pins, unsigned char command);
+typedef struct {
+    unsigned int width, height;
+} st7735s_window_size;
+
+void st7735s_init(st7735s_pins *pins, st7735s_window_size *size, unsigned char pin_count);
+void st7735s_write_byte(st7735s_pins *pins, unsigned char byte);
+void st7735s_write_data(st7735s_pins *pins, unsigned char data);
+void st7735s_write_command(st7735s_pins *pins, unsigned char command);
+void st7735s_blkctl(st7735s_pins *pins, unsigned char state);
 
 /*
 File: ST7735S_DRIVER_H
 */
-#endif
