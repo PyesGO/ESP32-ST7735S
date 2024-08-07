@@ -37,9 +37,9 @@ init_gpio(st7735s_pins *pins, unsigned char pin_count) {
 static void
 cmd_list_helper(st7735s_pins *pins, unsigned char *cmd_list) {
      unsigned char num_commands,
-                  num_args,
-                  delayms,
-                  *command_list_addr;
+                   num_args,
+                   delayms,
+                   *command_list_addr;
 
     command_list_addr = cmd_list;
     num_commands = *(command_list_addr++);
