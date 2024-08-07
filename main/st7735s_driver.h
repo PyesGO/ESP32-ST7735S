@@ -76,6 +76,17 @@ void st7735s_write_byte(st7735s_pins *pins, unsigned char byte);
 void st7735s_write_data(st7735s_pins *pins, unsigned char data);
 void st7735s_write_command(st7735s_pins *pins, unsigned char command);
 void st7735s_blkctl(st7735s_pins *pins, unsigned char state);
+void st7735s_start_transmit(st7735s_pins *pins);
+void st7735s_stop_transmit(st7735s_pins *pins);
+void st7735s_set_window_addr(
+        st7735s_pins *pins,
+        unsigned char x1,
+        unsigned char y1,
+        unsigned char x2,
+        unsigned char y2);
+void st7735s_hwreset(st7735s_pins *pins);
+void st7735s_fill_window(st7735s_pins *pins, unsigned short int color);
+void timesleep_ms(unsigned int ms);
 
 /*
 File: ST7735S_DRIVER_H
