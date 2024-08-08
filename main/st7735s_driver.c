@@ -2,17 +2,20 @@
 #include "st7735s_driver.h"
 // GPIO Includes:
 #include "driver/gpio.h"
-#include "hal/gpio_types.h"
 // FreeRTOS Includes:
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "portmacro.h"
 // Standard Includes:
-// #include <stdio.h>
+#include <stdio.h>
 
 void
 timesleep_ms(unsigned int ms) {
     vTaskDelay(ms / portTICK_PERIOD_MS);
+}
+
+void
+st7735s_powerctl(st7735s_pins *pins, unsigned char state) {
+    gpio_set_level(pins->VCC, state);
 }
 
 static void
@@ -36,59 +39,78 @@ init_gpio(st7735s_pins *pins, unsigned char pin_count) {
 
 static void
 cmd_list_helper(st7735s_pins *pins, unsigned char *cmd_list) {
-     unsigned char num_commands,
-                   num_args,
-                   delayms,
-                   *command_list_addr;
+    unsigned char num_commands,
+                  num_args,
+                  delayms,
+                  *command_list_addr,
+                  current_command,
+                  current_argument;
 
     command_list_addr = cmd_list;
     num_commands = *(command_list_addr++);
     while (num_commands--) {
-        st7735s_write_command(pins, *(command_list_addr++));
-        // printf("command: %u\n", *(command_list_addr++));
+        current_command = *(command_list_addr++);
+        printf("write command: %x\n", current_command);
+        st7735s_write_command(pins, current_command);
         
         num_args = *(command_list_addr++);
         if (num_args) {
             while (num_args--) {
-                st7735s_write_data(pins, *(command_list_addr++));
-                // printf("args: %u\n", *(command_list_addr++));
+                current_argument = *(command_list_addr++);
+                printf("write argument: %x\n", current_argument);
+                st7735s_write_data(pins, current_argument);
             }
         }
         
         delayms = *(command_list_addr++);
         if (delayms) {
-            // printf("delay: %u (ms)\n", delayms);
+            printf("delay: %u ms\n", delayms);
             timesleep_ms(delayms);
         }
-    }    
+    }
 }
+
 
 void
 st7735s_hwreset(st7735s_pins *pins) {
+    gpio_set_level(pins->RES, 0);
+    timesleep_ms(1);
     gpio_set_level(pins->RES, 1);
     timesleep_ms(120);
-    gpio_set_level(pins->RES, 0);
 }
 
 void
-st7735s_init(st7735s_pins *pins, st7735s_window_size *size, unsigned char pin_count) {
+st7735s_init(st7735s_pins *pins, st7735s_size *size, unsigned char pin_count) {
     init_gpio(pins, pin_count);
+    st7735s_powerctl(pins, 1);
+    timesleep_ms(120);
     st7735s_hwreset(pins);
 
     unsigned char command_list[] = {
-        5,
-        ST7735S_SWRESET,
-        0,
-        120,
+        7,
         ST7735S_SLPOUT,
         0,
         120,
+        ST7735S_FRMCTR1,
+        3,
+        0x05, 0x3C, 0x3C,
+        0,
+        ST7735S_FRMCTR2,
+        3,
+        0x08, 0x3B, 0x3B,
+        0,
+        ST7735S_FRMCTR3,
+        6,
+        0x05, 0x3C, 0x3C,
+        0x05, 0x3C, 0x3C,
+        0,
+        ST7735S_INVCTR,
+        1,
+        0x00,
+        0,
         ST7735S_COLMOD,
         1,
         0x05,
-        0,
-        ST7735S_NORON,
-        0,
         0,
         ST7735S_DISPON,
         0,
@@ -124,6 +146,7 @@ st7735s_set_window_addr(
         unsigned char y2) {
 
     unsigned char cmd_list[] = {
+        2,
         ST7735S_CASET,
         4,
         0x00, x1, 0x00, x2,
@@ -139,25 +162,40 @@ st7735s_set_window_addr(
 
 void
 st7735s_push_color(st7735s_pins *pins, unsigned short int color) {
-    st7735s_write_command(pins, ST7735S_RAMWR);
     st7735s_write_data(pins, color >> 8);
     st7735s_write_data(pins, color);
 }
 
 void
-st7735s_fill_window(st7735s_pins *pins, unsigned short int color) {
+st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color) {
+    unsigned char high_color, low_color,
+                  x, y;
+    
+    high_color = color >> 8;
+    low_color = color;
+    
+    printf("width: %u; height: %u\n", size->width, size->height);
     st7735s_start_transmit(pins);
-    st7735s_set_window_addr(pins, 0, 0, 100, 100);
-    st7735s_push_color(pins, color);
+    st7735s_set_window_addr(pins, 0, 0, size->width, size->height);
+    st7735s_write_command(pins, ST7735S_RAMWR);
+    for (x = 0; x < size->width; ++x) {
+        for (y = 0; y < size->height; ++y) {
+            // printf("write color: %x\n", high_color);
+            st7735s_write_data(pins, high_color);
+            // printf("write color: %x\n", low_color);
+            st7735s_write_data(pins, low_color);
+        }
+    }
     st7735s_stop_transmit(pins);
 }
 
 void
 st7735s_write_byte(st7735s_pins *pins, unsigned char byte) {
     unsigned char first_bit_mask = 0x80,
-                  count = 0;
+                  count;
 
-    for ( ; count < 8; ++count) {
+    // printf("(func write_byte): %x\n", byte);
+    for (count = 0; count < 8; ++count) {
         gpio_set_level(pins->SCL, 0);
         gpio_set_level(pins->SDA, byte & first_bit_mask);
         gpio_set_level(pins->SCL, 1);
@@ -167,12 +205,14 @@ st7735s_write_byte(st7735s_pins *pins, unsigned char byte) {
 
 void
 st7735s_write_data(st7735s_pins *pins, unsigned char data) {
+    // printf("(func write_data): %x\n", data);
     gpio_set_level(pins->DC, 1);
     st7735s_write_byte(pins, data);
 }
 
 void
 st7735s_write_command(st7735s_pins *pins, unsigned char command) {
+    // printf("(func write_command): %x\n", command);
     gpio_set_level(pins->DC, 0);
     st7735s_write_byte(pins, command);
 }
