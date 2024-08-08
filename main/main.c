@@ -3,21 +3,22 @@
 void
 app_main(void) {
     st7735s_pins pins = {
-        .SCL = 4,
-        .SDA = 16,
-        .RES = 23,
-        .DC = 19,
-        .CS = 21,
-        .BLK = 5
+        .VCC = 13,
+        .SCL = 12,
+        .SDA = 14,
+        .RES = 27,
+        .DC = 26,
+        .CS = 25,
+        .BLK = 33
     };
-    st7735s_window_size size = {
-        .width = 128,
-        .height = 128
+    st7735s_size size = {
+        .width = 16,
+        .height = 16
     };
 
     st7735s_init(&pins, &size, ST7735S_PIN_COUNT(pins));
     st7735s_blkctl(&pins, 1);
-    st7735s_fill_window(&pins, 0x07E0);
-    timesleep_ms(8000);
+    st7735s_fill_screen(&pins, &size, 0xF800);
+    timesleep_ms(30000);
     st7735s_blkctl(&pins, 0);
 }
