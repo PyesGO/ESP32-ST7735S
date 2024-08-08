@@ -60,18 +60,19 @@
 #define ST7735S_GMCTRP1 0xE0
 #define ST7735S_GMCTRN1 0xE1
 #define ST7735S_GCV 0xFC
-// Done.
+// Private defines:
+#define __INLINE_FUN static inline __attribute__((always_inline))
 
 typedef struct {
-    unsigned char SCL, SDA, RES, DC, CS, BLK;
+    unsigned char VCC, SCL, SDA, RES, DC, CS, BLK;
 } st7735s_pins;
 #define ST7735S_PIN_COUNT(pins_struct) sizeof(pins_struct) / sizeof(unsigned char)
 
 typedef struct {
     unsigned int width, height;
-} st7735s_window_size;
+} st7735s_size;
 
-void st7735s_init(st7735s_pins *pins, st7735s_window_size *size, unsigned char pin_count);
+void st7735s_init(st7735s_pins *pins, st7735s_size *size, unsigned char pin_count);
 void st7735s_write_byte(st7735s_pins *pins, unsigned char byte);
 void st7735s_write_data(st7735s_pins *pins, unsigned char data);
 void st7735s_write_command(st7735s_pins *pins, unsigned char command);
@@ -85,8 +86,9 @@ void st7735s_set_window_addr(
         unsigned char x2,
         unsigned char y2);
 void st7735s_hwreset(st7735s_pins *pins);
-void st7735s_fill_window(st7735s_pins *pins, unsigned short int color);
+void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color);
 void timesleep_ms(unsigned int ms);
+void st7735s_powerctl(st7735s_pins *pins, unsigned char state);
 
 /*
 File: ST7735S_DRIVER_H
