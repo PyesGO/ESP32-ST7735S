@@ -5,7 +5,6 @@
 // FreeRTOS Includes:
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_async_memcpy.h"
 // Standard Includes:
 #include <stdio.h>
 
@@ -152,11 +151,10 @@ st7735s_push_color(st7735s_pins *pins, unsigned short int color) {
 
 void
 st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color) {
-    unsigned char high_color, low_color,
-                  x, y;
-    
-    high_color = color >> 8;
-    low_color = color;
+    unsigned char x, y, hicolor, locolor;
+
+    hicolor = color >> 8;
+    locolor = color;
     
     // printf("width: %u; height: %u\n", size->width, size->height);
     st7735s_enable_transmit(pins);
@@ -164,10 +162,8 @@ st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int c
     st7735s_write_command(pins, ST7735S_RAMWR);
     for (x = 0; x < (size->width); ++x) {
         for (y = 0; y < (size->height); ++y) {
-            // printf("write color: %x\n", high_color);
-            st7735s_write_data(pins, high_color);
-            // printf("write color: %x\n", low_color);
-            st7735s_write_data(pins, low_color);
+            st7735s_write_data(pins, hicolor);
+            st7735s_write_data(pins, locolor);
         }
     }
     st7735s_disable_transmit(pins);

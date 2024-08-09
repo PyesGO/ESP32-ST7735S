@@ -75,33 +75,27 @@ typedef struct {
 void st7735s_init(st7735s_pins *pins, st7735s_size *size, unsigned char pin_count);
 // void st7735s_write_byte(st7735s_pins *pins, unsigned char byte);
 
-#define st7735s_write(pins_struct_addr, type, data) {                   \
-    __typeof__(type) __count = sizeof(type) * 8;                        \
-    __typeof__(type) __bit_mask = 1 << (__count - 1);                   \
-                                                                        \
-    while (__count--) {                                                 \
-        gpio_set_level((pins_struct_addr)->SCL, 0);                     \
-        gpio_set_level((pins_struct_addr)->SDA, data & __bit_mask);     \
-        gpio_set_level((pins_struct_addr)->SCL, 1);                     \
-        data <<= 1;                                                     \
-    }                                                                   \
+#define st7735s_write_byte(pins_struct_addr, byte) { \
+    unsigned char __count, __byte; \
+    __byte = byte; \
+    for (__count = 0; __count < 8; ++__count) { \
+        gpio_set_level((pins_struct_addr)->SCL, 0); \
+        gpio_set_level((pins_struct_addr)->SDA, __byte & 0x80); \
+        gpio_set_level((pins_struct_addr)->SCL, 1); \
+        __byte <<= 1; \
+    } \
 }
 
-#define st7735s_write_byte(pins_struct_addr, byte) {            \
-    __typeof__(byte) __byte = byte;                             \
-    st7735s_write(pins_struct_addr, unsigned char, __byte);     \
+#define st7735s_write_command(pins_struct_addr, command) { \
+    __typeof__(command) __command = command; \
+    gpio_set_level((pins_struct_addr)->DC, 0); \
+    st7735s_write_byte(pins_struct_addr, __command); \
 }
 
-#define st7735s_write_command(pins_struct_addr, command) {  \
-    __typeof__(command) __command = command;                \
-    gpio_set_level((pins_struct_addr)->DC, 0);              \
-    st7735s_write_byte(pins_struct_addr, __command);        \
-}
-
-#define st7735s_write_data(pins_struct_addr, data) {        \
-    __typeof__(data) __data = data;                         \
-    gpio_set_level((pins_struct_addr)->DC, 1);              \
-    st7735s_write_byte(pins_struct_addr, __data);           \
+#define st7735s_write_data(pins_struct_addr, data) { \
+    __typeof__(data) __data = data; \
+    gpio_set_level((pins_struct_addr)->DC, 1); \
+    st7735s_write_byte(pins_struct_addr, __data); \
 }
 
 #define st7735s_enable_transmit(pins_struct_addr) \
