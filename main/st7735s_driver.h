@@ -1,5 +1,7 @@
 #pragma once
 
+#include "driver/gpio.h"
+
 // System function command list:
 #define ST7735S_NOP 0x00
 #define ST7735S_SWRESET 0x01
@@ -60,8 +62,6 @@
 #define ST7735S_GMCTRP1 0xE0
 #define ST7735S_GMCTRN1 0xE1
 #define ST7735S_GCV 0xFC
-// Private defines:
-#define __INLINE_FUN static inline __attribute__((always_inline))
 
 typedef struct {
     unsigned char VCC, SCL, SDA, RES, DC, CS, BLK;
@@ -73,12 +73,49 @@ typedef struct {
 } st7735s_size;
 
 void st7735s_init(st7735s_pins *pins, st7735s_size *size, unsigned char pin_count);
-void st7735s_write_byte(st7735s_pins *pins, unsigned char byte);
-void st7735s_write_data(st7735s_pins *pins, unsigned char data);
-void st7735s_write_command(st7735s_pins *pins, unsigned char command);
-void st7735s_blkctl(st7735s_pins *pins, unsigned char state);
-void st7735s_start_transmit(st7735s_pins *pins);
-void st7735s_stop_transmit(st7735s_pins *pins);
+// void st7735s_write_byte(st7735s_pins *pins, unsigned char byte);
+
+#define st7735s_write(pins_struct_addr, type, data) {                   \
+    __typeof__(type) __count = sizeof(type) * 8;                        \
+    __typeof__(type) __bit_mask = 1 << (__count - 1);                   \
+                                                                        \
+    while (__count--) {                                                 \
+        gpio_set_level((pins_struct_addr)->SCL, 0);                     \
+        gpio_set_level((pins_struct_addr)->SDA, data & __bit_mask);     \
+        gpio_set_level((pins_struct_addr)->SCL, 1);                     \
+        data <<= 1;                                                     \
+    }                                                                   \
+}
+
+#define st7735s_write_byte(pins_struct_addr, byte) {            \
+    __typeof__(byte) __byte = byte;                             \
+    st7735s_write(pins_struct_addr, unsigned char, __byte);     \
+}
+
+#define st7735s_write_command(pins_struct_addr, command) {  \
+    __typeof__(command) __command = command;                \
+    gpio_set_level((pins_struct_addr)->DC, 0);              \
+    st7735s_write_byte(pins_struct_addr, __command);        \
+}
+
+#define st7735s_write_data(pins_struct_addr, data) {        \
+    __typeof__(data) __data = data;                         \
+    gpio_set_level((pins_struct_addr)->DC, 1);              \
+    st7735s_write_byte(pins_struct_addr, __data);           \
+}
+
+#define st7735s_enable_transmit(pins_struct_addr) \
+    gpio_set_level((pins_struct_addr)->CS, 0)
+
+#define st7735s_disable_transmit(pins_struct_addr) \
+    gpio_set_level((pins_struct_addr)->CS, 1)
+
+#define st7735s_blkctl(pins_struct_addr, state) \
+    gpio_set_level((pins_struct_addr)->BLK, state)
+
+#define st7735s_powerctl(pins_struct_addr, state) \
+    gpio_set_level((pins_struct_addr)->VCC, state)
+
 void st7735s_set_window_addr(
         st7735s_pins *pins,
         unsigned char x1,
@@ -88,7 +125,6 @@ void st7735s_set_window_addr(
 void st7735s_hwreset(st7735s_pins *pins);
 void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color);
 void timesleep_ms(unsigned int ms);
-void st7735s_powerctl(st7735s_pins *pins, unsigned char state);
 
 /*
 File: ST7735S_DRIVER_H

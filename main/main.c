@@ -12,13 +12,22 @@ app_main(void) {
         .BLK = 33
     };
     st7735s_size size = {
-        .width = 16,
-        .height = 16
+        .width = 132,
+        .height = 132
     };
+    
+    unsigned short int color;
 
     st7735s_init(&pins, &size, ST7735S_PIN_COUNT(pins));
     st7735s_blkctl(&pins, 1);
-    st7735s_fill_screen(&pins, &size, 0xF800);
-    timesleep_ms(30000);
+
+    color = 0;
+    while (color < 0xFF) {
+        st7735s_fill_screen(&pins, &size, color);
+        color += 0x10;
+        timesleep_ms(100);
+    }
+
     st7735s_blkctl(&pins, 0);
+    st7735s_powerctl(&pins, 0);
 }
