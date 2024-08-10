@@ -1,6 +1,7 @@
 #pragma once
 
 #include "driver/gpio.h"
+#include <stdlib.h>
 
 // System function command list:
 #define ST7735S_NOP 0x00
@@ -66,14 +67,13 @@
 typedef struct {
     unsigned char VCC, SCL, SDA, RES, DC, CS, BLK;
 } st7735s_pins;
-#define ST7735S_PIN_COUNT(pins_struct) sizeof(pins_struct) / sizeof(unsigned char)
+static const unsigned char ST7735S_PINS_NUM = sizeof(st7735s_pins);
 
 typedef struct {
     unsigned int width, height;
 } st7735s_size;
 
-void st7735s_init(st7735s_pins *pins, st7735s_size *size, unsigned char pin_count);
-// void st7735s_write_byte(st7735s_pins *pins, unsigned char byte);
+void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 
 #define st7735s_write_byte(pins_struct_addr, byte) { \
     unsigned char __count, __byte; \
@@ -109,6 +109,44 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size, unsigned char pin_coun
 
 #define st7735s_powerctl(pins_struct_addr, state) \
     gpio_set_level((pins_struct_addr)->VCC, state)
+
+typedef struct {
+    unsigned char *addr;
+    unsigned int size, offset;
+} st7735s_buffer;
+
+#define st7735s_buffer_init(bufsize) { \
+    .addr = (unsigned char *)malloc(bufsize), \
+    .size = bufsize, \
+    .offset = 0 \
+}
+
+#define st7735s_buffer_commit(pins_addr, buffer) { \
+    unsigned char *__bufaddr = buffer.addr; \
+    while (buffer.offset--) { \
+        st7735s_write_data(pins_addr, *(__bufaddr++)); \
+    }; buffer.offset = 0; \
+}
+
+#define st7735s_buffer_write(pins_addr, buffer, data) { \
+    unsigned char *__bufaddr = buffer.addr, \
+                  *__data = (unsigned char *)&data; \
+    __bufaddr += buffer.offset; \
+    unsigned short int __count = sizeof(data); \
+    while (__count--) { \
+        *(__bufaddr++) = *(__data++); \
+        ++(buffer.offset); \
+        if (buffer.offset == buffer.size) { \
+            st7735s_buffer_commit(pins_addr, buffer); \
+        } \
+    } \
+}
+
+#define st7735s_buffer_clean(buffer) { \
+    free(buffer.addr); \
+    buffer.addr = NULL; \
+    buffer.offset = buffer.size = 0; \
+}
 
 void st7735s_set_window_addr(
         st7735s_pins *pins,

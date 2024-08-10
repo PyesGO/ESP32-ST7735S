@@ -7,15 +7,16 @@
 #include "freertos/task.h"
 // Standard Includes:
 #include <stdio.h>
+#include <stdlib.h>
 
 static void
-pins_init(st7735s_pins *pins, unsigned char pin_count) {
+pins_init(st7735s_pins *pins) {
     unsigned long long pins_mask;
     unsigned char count, *pins_ptr;
 
     pins_ptr = (unsigned char *)pins;
     pins_mask = 0;
-    for (count = 0; count < pin_count; ++count)
+    for (count = 0; count < ST7735S_PINS_NUM; ++count)
         pins_mask |= 1ULL << *(pins_ptr++);
 
     gpio_config_t conf;
@@ -74,29 +75,20 @@ st7735s_hwreset(st7735s_pins *pins) {
 }
 
 void
-st7735s_init(st7735s_pins *pins, st7735s_size *size, unsigned char pin_count) {
-    pins_init(pins, pin_count);
+st7735s_init(st7735s_pins *pins, st7735s_size *size) {
+    pins_init(pins);
     st7735s_powerctl(pins, 1);
     timesleep_ms(120);
     st7735s_hwreset(pins);
 
     unsigned char command_list[] = {
-        8,
+        7,
         ST7735S_SLPOUT,
         0,
         120,
         ST7735S_FRMCTR1,
         3,
-        0x05, 0x3C, 0x3C,
-        0,
-        ST7735S_FRMCTR2,
-        3,
-        0x08, 0x3B, 0x3B,
-        0,
-        ST7735S_FRMCTR3,
-        6,
-        0x05, 0x3C, 0x3C,
-        0x05, 0x3C, 0x3C,
+        0x00, 0x01, 0x01,
         0,
         ST7735S_INVCTR,
         1,
@@ -109,6 +101,9 @@ st7735s_init(st7735s_pins *pins, st7735s_size *size, unsigned char pin_count) {
         ST7735S_COLMOD,
         1,
         0x05,
+        0,
+        ST7735S_NORON,
+        0,
         0,
         ST7735S_DISPON,
         0,
@@ -144,28 +139,20 @@ st7735s_set_window_addr(
 }
 
 void
-st7735s_push_color(st7735s_pins *pins, unsigned short int color) {
-    st7735s_write_data(pins, color >> 8);
-    st7735s_write_data(pins, color);
-}
-
-void
 st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color) {
-    unsigned char x, y, hicolor, locolor;
+    unsigned char x, y;
 
-    hicolor = color >> 8;
-    locolor = color;
-    
-    // printf("width: %u; height: %u\n", size->width, size->height);
+    st7735s_buffer buffer = st7735s_buffer_init(0x1000);
     st7735s_enable_transmit(pins);
-    st7735s_set_window_addr(pins, 0, 0, size->width, size->height);
+    st7735s_set_window_addr(pins, 0, 0, (size -> width), (size->height));
     st7735s_write_command(pins, ST7735S_RAMWR);
     for (x = 0; x < (size->width); ++x) {
         for (y = 0; y < (size->height); ++y) {
-            st7735s_write_data(pins, hicolor);
-            st7735s_write_data(pins, locolor);
+            st7735s_buffer_write(pins, buffer, color);
         }
     }
+    st7735s_buffer_commit(pins, buffer);
     st7735s_disable_transmit(pins);
+    st7735s_buffer_clean(buffer);
 }
 

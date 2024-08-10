@@ -18,14 +18,15 @@ app_main(void) {
     
     unsigned short int color;
 
-    st7735s_init(&pins, &size, ST7735S_PIN_COUNT(pins));
+    st7735s_init(&pins, &size);
     st7735s_blkctl(&pins, 1);
-
+    
+    // st7735s_fill_screen(&pins, &size, 0x03FE);
     color = 0;
-    while (color < 0xFF) {
+    while (color < 0xFFFF) {
         st7735s_fill_screen(&pins, &size, color);
-        color += 0x10;
-        timesleep_ms(100);
+        color += 0xFF;
+        timesleep_ms(500);
     }
 
     st7735s_blkctl(&pins, 0);
