@@ -88,7 +88,7 @@ st7735s_init(st7735s_pins *pins, st7735s_size *size) {
         120,
         ST7735S_FRMCTR1,
         3,
-        0x00, 0x01, 0x01,
+        0x00, 0x00, 0x00,
         0,
         ST7735S_INVCTR,
         1,
@@ -139,13 +139,22 @@ st7735s_set_window_addr(
 }
 
 void
+st7735s_draw_point(st7735s_pins *pins, unsigned char x, unsigned char y, unsigned short int color) {
+    st7735s_enable_transmit(pins);
+    st7735s_set_window_addr(pins, x, (x + 1), y, (y + 1));
+    st7735s_set_SRAM_writable(pins);
+    st7735s_write_data(pins, color);
+    st7735s_disable_transmit(pins);
+}
+
+void
 st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color) {
     unsigned char x, y;
 
-    st7735s_buffer buffer = st7735s_buffer_init(0x1000);
+    st7735s_buffer buffer = st7735s_buffer_init(1024);
     st7735s_enable_transmit(pins);
     st7735s_set_window_addr(pins, 0, 0, (size -> width), (size->height));
-    st7735s_write_command(pins, ST7735S_RAMWR);
+    st7735s_set_SRAM_writable(pins);
     for (x = 0; x < (size->width); ++x) {
         for (y = 0; y < (size->height); ++y) {
             st7735s_buffer_write(pins, buffer, color);

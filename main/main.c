@@ -16,19 +16,24 @@ app_main(void) {
         .height = 132
     };
     
+    unsigned char count;
     unsigned short int color;
 
     st7735s_init(&pins, &size);
     st7735s_blkctl(&pins, 1);
     
-    // st7735s_fill_screen(&pins, &size, 0x03FE);
-    color = 0;
-    while (color < 0xFFFF) {
-        st7735s_fill_screen(&pins, &size, color);
-        color += 0xFF;
-        timesleep_ms(500);
-    }
+    // color = 0;
+    // for (count = 0; count < 10; ++count) {
+    //     st7735s_fill_screen(&pins, &size, color);
+    //     color += 0x20;
+    //     timesleep_ms(500);
+    // }
+    
+    st7735s_fill_screen(&pins, &size, 0x00);
+    st7735s_draw_point(&pins, 66, 66, 0xFFFF);
+    timesleep_ms(10000);
 
     st7735s_blkctl(&pins, 0);
+    timesleep_ms(120);
     st7735s_powerctl(&pins, 0);
 }
