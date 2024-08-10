@@ -7,7 +7,6 @@
 #include "freertos/task.h"
 // Standard Includes:
 #include <stdio.h>
-#include <stdlib.h>
 
 static void
 pins_init(st7735s_pins *pins) {
