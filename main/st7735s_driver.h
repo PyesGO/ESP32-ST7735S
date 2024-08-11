@@ -82,21 +82,21 @@ typedef struct {
 
 void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 
-#define st7735s_write_byte(pins_struct_addr, byte) { \
+#define st7735s_write_byte(pins_addr, byte) { \
     unsigned char __count, __byte; \
     __byte = byte; \
     for (__count = 0; __count < 8; ++__count) { \
-        gpio_set_level((pins_struct_addr)->SCL, 0); \
-        gpio_set_level((pins_struct_addr)->SDA, __byte & 0x80); \
-        gpio_set_level((pins_struct_addr)->SCL, 1); \
+        gpio_set_level((pins_addr)->SCL, 0); \
+        gpio_set_level((pins_addr)->SDA, __byte & 0x80); \
+        gpio_set_level((pins_addr)->SCL, 1); \
         __byte <<= 1; \
     } \
 }
 
-#define st7735s_write_command(pins_struct_addr, command) { \
-    __typeof__(command) __command = command; \
-    gpio_set_level((pins_struct_addr)->DC, 0); \
-    st7735s_write_byte(pins_struct_addr, __command); \
+#define st7735s_write_command(pins_addr, command) { \
+    unsigned char __command = command; \
+    gpio_set_level((pins_addr)->DC, 0); \
+    st7735s_write_byte(pins_addr, __command); \
 }
 
 #define st7735s_write_rawdata(pins_addr, data_addr, count) { \
@@ -113,17 +113,17 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
     st7735s_write_rawdata(pins_addr, &__data, sizeof(__data)); \
 }
 
-#define st7735s_enable_transmit(pins_struct_addr) \
-    gpio_set_level((pins_struct_addr)->CS, 0)
+#define st7735s_enable_transmit(pins_addr) \
+    gpio_set_level((pins_addr)->CS, 0)
 
-#define st7735s_disable_transmit(pins_struct_addr) \
-    gpio_set_level((pins_struct_addr)->CS, 1)
+#define st7735s_disable_transmit(pins_addr) \
+    gpio_set_level((pins_addr)->CS, 1)
 
-#define st7735s_blkctl(pins_struct_addr, state) \
-    gpio_set_level((pins_struct_addr)->BLK, state)
+#define st7735s_blkctl(pins_addr, state) \
+    gpio_set_level((pins_addr)->BLK, state)
 
-#define st7735s_powerctl(pins_struct_addr, state) \
-    gpio_set_level((pins_struct_addr)->VCC, state)
+#define st7735s_powerctl(pins_addr, state) \
+    gpio_set_level((pins_addr)->VCC, state)
 
 
 #define st7735s_buffer_init(bufsize) { \
@@ -132,29 +132,29 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
     .offset = 0 \
 }
 
-#define st7735s_buffer_commit(pins_addr, buffer) { \
-    st7735s_write_rawdata(pins_addr, buffer.addr, buffer.offset); \
-    buffer.offset = 0; \
+#define st7735s_buffer_commit(pins_addr, buf_addr) { \
+    st7735s_write_rawdata(pins_addr, (buf_addr)->addr, (buf_addr)->offset); \
+    (buf_addr)->offset = 0; \
 }
 
-#define st7735s_buffer_write(pins_addr, buffer, data) { \
-    unsigned char *__bufaddr = buffer.addr, \
+#define st7735s_buffer_write(pins_addr, buf_addr, data) { \
+    unsigned char *__bufdata_addr = (buf_addr)->addr, \
                   *__data = (unsigned char *)&data; \
-    __bufaddr += buffer.offset; \
+    __bufdata_addr += (buf_addr)->offset; \
     st7735s_size_t __count = sizeof(data); \
     while (__count--) { \
-        *(__bufaddr++) = *(__data++); \
-        ++(buffer.offset); \
-        if (buffer.offset == buffer.size) { \
-            st7735s_buffer_commit(pins_addr, buffer); \
+        *(__bufdata_addr++) = *(__data++); \
+        ++((buf_addr)->offset); \
+        if ((buf_addr)->offset == (buf_addr)->size) { \
+            st7735s_buffer_commit(pins_addr, buf_addr); \
         } \
     } \
 }
 
-#define st7735s_buffer_clean(buffer) { \
-    free(buffer.addr); \
-    buffer.addr = NULL; \
-    buffer.offset = buffer.size = 0; \
+#define st7735s_buffer_free(buf_addr) { \
+    free((buf_addr)->addr); \
+    (buf_addr)->addr = NULL; \
+    (buf_addr)->offset = (buf_addr)->size = 0; \
 }
 
 #define st7735s_set_SRAM_writable(pins_addr) \
@@ -168,7 +168,7 @@ void st7735s_set_window_addr(
         unsigned char y2);
 void st7735s_hwreset(st7735s_pins *pins);
 void st7735s_draw_point(st7735s_pins *pins, unsigned char x, unsigned char y, unsigned short int color);
-void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color);
+void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color, st7735s_buffer *buffer);
 void timesleep_ms(unsigned int ms);
 
 /*

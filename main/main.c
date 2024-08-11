@@ -15,6 +15,7 @@ app_main(void) {
         .width = 132,
         .height = 132
     };
+    st7735s_buffer buffer = st7735s_buffer_init(4096);
     
     unsigned char count;
     unsigned short int color;
@@ -22,17 +23,16 @@ app_main(void) {
     st7735s_init(&pins, &size);
     st7735s_blkctl(&pins, 1);
     
-    // color = 0;
-    // for (count = 0; count < 10; ++count) {
-    //     st7735s_fill_screen(&pins, &size, color);
-    //     color += 0x20;
-    //     timesleep_ms(500);
-    // }
-    
-    st7735s_fill_screen(&pins, &size, 0x00);
-    st7735s_draw_point(&pins, 66, 66, 0xFFFF);
-    timesleep_ms(10000);
+    color = 0;
+    for (count = 0; ((count < 50) && (color < 0xFFFF)); ++count) {
+        st7735s_fill_screen(&pins, &size, color, &buffer);
+        color += 0x20;
+    }
 
+    // st7735s_fill_screen(&pins, &size, 0x00, );
+    // st7735s_draw_point(&pins, 66, 66, 0xFFFF);
+    // timesleep_ms(10000);
+    st7735s_buffer_free(&buffer);
     st7735s_blkctl(&pins, 0);
     timesleep_ms(120);
     st7735s_powerctl(&pins, 0);

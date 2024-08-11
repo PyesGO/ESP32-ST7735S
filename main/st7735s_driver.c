@@ -40,21 +40,18 @@ cmd_list_helper(st7735s_pins *pins, unsigned char *cmd_list) {
     num_commands = *(command_list_addr++);
     while (num_commands--) {
         current_command = *(command_list_addr++);
-        // printf("write command: %x\n", current_command);
         st7735s_write_command(pins, current_command);
         
         num_args = *(command_list_addr++);
         if (num_args) {
             while (num_args--) {
                 current_argument = *(command_list_addr++);
-                // printf("write argument: %x\n", current_argument);
                 st7735s_write_data(pins, current_argument);
             }
         }
         
         delayms = *(command_list_addr++);
         if (delayms) {
-            // printf("delay: %u ms\n", delayms);
             timesleep_ms(delayms);
         }
     }
@@ -147,20 +144,24 @@ st7735s_draw_point(st7735s_pins *pins, unsigned char x, unsigned char y, unsigne
 }
 
 void
-st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color) {
+st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color, st7735s_buffer *buffer) {
     unsigned char x, y;
 
-    st7735s_buffer buffer = st7735s_buffer_init(1024);
     st7735s_enable_transmit(pins);
-    st7735s_set_window_addr(pins, 0, 0, (size -> width), (size->height));
+    st7735s_set_window_addr(pins, 0, 0, (size->width), (size->height));
     st7735s_set_SRAM_writable(pins);
     for (x = 0; x < (size->width); ++x) {
         for (y = 0; y < (size->height); ++y) {
-            st7735s_buffer_write(pins, buffer, color);
+            if (buffer != NULL) {
+                st7735s_buffer_write(pins, buffer, color);
+            } else {
+                st7735s_write_data(pins, color);
+            }
         }
     }
-    st7735s_buffer_commit(pins, buffer);
+    if (buffer != NULL) {
+        st7735s_buffer_commit(pins, buffer);
+    }
     st7735s_disable_transmit(pins);
-    st7735s_buffer_clean(buffer);
 }
 
