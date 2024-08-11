@@ -100,7 +100,7 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 }
 
 #define st7735s_write_rawdata(pins_addr, data_addr, count) { \
-    unsigned char *__data_addr = data_addr; \
+    unsigned char *__data_addr = (unsigned char *)data_addr; \
     st7735s_size_t __count = count; \
     gpio_set_level((pins_addr)->DC, 1); \
     while (__count--) { \
