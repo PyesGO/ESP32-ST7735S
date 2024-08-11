@@ -18,13 +18,13 @@ pins_init(st7735s_pins *pins) {
     for (count = 0; count < ST7735S_PINS_NUM; ++count)
         pins_mask |= 1ULL << *(pins_ptr++);
 
-    gpio_config_t conf;
-    conf.mode = GPIO_MODE_OUTPUT;
-    conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    conf.intr_type = GPIO_INTR_DISABLE;
-    conf.pin_bit_mask = pins_mask;
-    gpio_config(&conf);
+    gpio_config_t conf = {
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+        .pin_bit_mask = pins_mask
+    }; gpio_config(&conf);
 }
 
 static void
@@ -87,7 +87,7 @@ st7735s_init(st7735s_pins *pins, st7735s_size *size) {
         120,
         ST7735S_FRMCTR1,
         3,
-        0x00, 0x00, 0x00,
+        0x00, 0x01, 0x01,
         0,
         ST7735S_INVCTR,
         1,
