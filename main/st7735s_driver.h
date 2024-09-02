@@ -158,7 +158,7 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 }
 
 #define st7735s_set_SRAM_writable(pins_addr) \
-    st7735s_write_command(pins_addr, ST7735S_RAMWR); \
+    st7735s_write_command(pins_addr, ST7735S_RAMWR)
 
 void st7735s_set_window_addr(
         st7735s_pins *pins,

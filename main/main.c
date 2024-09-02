@@ -12,8 +12,8 @@ app_main(void) {
         .BLK = 33
     };
     st7735s_size size = {
-        .width = 132,
-        .height = 132
+        .width = 16,
+        .height = 16
     };
     st7735s_buffer buffer = st7735s_buffer_init(4096);
     
@@ -26,6 +26,7 @@ app_main(void) {
     color = 0;
     for (count = 0; ((count < 50) && (color < 0xFFFF)); ++count) {
         st7735s_fill_screen(&pins, &size, color, &buffer);
+        timesleep_ms(500);
         color += 0x20;
     }
 
