@@ -114,7 +114,7 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 }
 
 #define st7735s_write_color(pins_addr, color) \
-    st7735s_write_data(pins_addr, (unsigned short int)color)
+    st7735s_write_data(pins_addr, (unsigned short int)(color))
 
 #define st7735s_enable_transmit(pins_addr) \
     gpio_set_level((pins_addr)->CS, 0)
@@ -142,11 +142,11 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 
 #define st7735s_buffer_write(pins_addr, buf_addr, data) { \
     unsigned char *__bufdata_addr = (buf_addr)->addr, \
-                  *__data = (unsigned char *)&data; \
+                  *__data_addr = (unsigned char *)&(data); \
     __bufdata_addr += (buf_addr)->offset; \
     st7735s_size_t __count = sizeof(data); \
     while (__count--) { \
-        *(__bufdata_addr++) = *(__data++); \
+        *(__bufdata_addr++) = *(__data_addr++); \
         ++((buf_addr)->offset); \
         if ((buf_addr)->offset == (buf_addr)->size) { \
             st7735s_buffer_commit(pins_addr, buf_addr); \
