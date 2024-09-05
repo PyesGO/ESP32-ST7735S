@@ -114,20 +114,20 @@ st7735s_init(st7735s_pins *pins, st7735s_size *size) {
 void
 st7735s_set_window_addr(
         st7735s_pins *pins,
+        unsigned char x0,
+        unsigned char y0,
         unsigned char x1,
-        unsigned char y1,
-        unsigned char x2,
-        unsigned char y2) {
+        unsigned char y1) {
 
     unsigned char cmd_list[] = {
         2,
         ST7735S_CASET,
         4,
-        0x00, x1, 0x00, x2,
+        0x00, x0, 0x00, (x1 - 1),
         0,
         ST7735S_RASET,
         4,
-        0x00, y1, 0x00, y2,
+        0x00, y0, 0x00, (y1 - 1),
         0
     };
 
@@ -135,11 +135,48 @@ st7735s_set_window_addr(
 }
 
 void
-st7735s_draw_point(st7735s_pins *pins, unsigned char x, unsigned char y, unsigned short int color) {
+st7735s_putchar(st7735s_pins *pins, unsigned char char_, unsigned short int color) {
+    unsigned char count;
+    for (count = 0; count < 8; ++count) {
+        if (char_ & 0x80) {
+            st7735s_write_color(pins, color);
+        } else {
+            st7735s_write_color(pins, 0x0000);
+        }
+        char_ <<= 1;
+    }
+}
+
+void
+st7735s_test_putchar(st7735s_pins *pins) {
+    unsigned char CHAR_A[] = {
+        0x00, 0x00, 
+        0x0e, 0x00, 
+        0x0e, 0x00, 
+        0x0b, 0x00, 
+        0x1b, 0x00, 
+        0x13, 0x00, 
+        0x11, 0x80, 
+        0x3f, 0x80, 
+        0x21, 0x80, 
+        0x20, 0xc0, 
+        0x60, 0xc0, 
+        0xf1, 0xe0, 
+        0x00, 0x00, 
+        0x00, 0x00, 
+        0x00, 0x00, 
+        0x00, 0x00
+    };
     st7735s_enable_transmit(pins);
-    st7735s_set_window_addr(pins, x, (x + 1), y, (y + 1));
+    st7735s_set_window_addr(pins, 16, 16, 32, 32);
     st7735s_set_SRAM_writable(pins);
-    st7735s_write_data(pins, color);
+
+    unsigned char count, *char_addr;
+    char_addr = CHAR_A;
+    for (count = 0; count < 32; ++count) {
+        st7735s_putchar(pins, *(char_addr++), 0xFFFF);
+    }
+
     st7735s_disable_transmit(pins);
 }
 
@@ -155,7 +192,7 @@ st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int c
             if (buffer != NULL) {
                 st7735s_buffer_write(pins, buffer, color);
             } else {
-                st7735s_write_data(pins, color);
+                st7735s_write_color(pins, color);
             }
         }
     }

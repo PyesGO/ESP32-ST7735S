@@ -72,7 +72,7 @@ typedef struct {
 static const unsigned char ST7735S_PINS_NUM = sizeof(st7735s_pins);
 
 typedef struct {
-    unsigned int width, height;
+    unsigned char width, height;
 } st7735s_size;
 
 typedef struct {
@@ -84,7 +84,7 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 
 #define st7735s_write_byte(pins_addr, byte) { \
     unsigned char __count, __byte; \
-    __byte = byte; \
+    __byte = (unsigned char)byte; \
     for (__count = 0; __count < 8; ++__count) { \
         gpio_set_level((pins_addr)->SCL, 0); \
         gpio_set_level((pins_addr)->SDA, __byte & 0x80); \
@@ -94,7 +94,7 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 }
 
 #define st7735s_write_command(pins_addr, command) { \
-    unsigned char __command = command; \
+    unsigned char __command = (unsigned char)command; \
     gpio_set_level((pins_addr)->DC, 0); \
     st7735s_write_byte(pins_addr, __command); \
 }
@@ -112,6 +112,9 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
     __typeof__(data) __data = data; \
     st7735s_write_rawdata(pins_addr, &__data, sizeof(__data)); \
 }
+
+#define st7735s_write_color(pins_addr, color) \
+    st7735s_write_data(pins_addr, (unsigned short int)color)
 
 #define st7735s_enable_transmit(pins_addr) \
     gpio_set_level((pins_addr)->CS, 0)
@@ -170,6 +173,7 @@ void st7735s_hwreset(st7735s_pins *pins);
 void st7735s_draw_point(st7735s_pins *pins, unsigned char x, unsigned char y, unsigned short int color);
 void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color, st7735s_buffer *buffer);
 void timesleep_ms(unsigned int ms);
+void st7735s_test_putchar(st7735s_pins *pins);
 
 /*
 File: ST7735S_DRIVER_H
