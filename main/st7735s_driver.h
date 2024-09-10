@@ -80,8 +80,6 @@ typedef struct {
     unsigned int size, offset;
 } st7735s_buffer;
 
-void st7735s_init(st7735s_pins *pins, st7735s_size *size);
-
 #define st7735s_write_byte(pins_addr, byte) { \
     unsigned char __count, __byte; \
     __byte = (unsigned char)byte; \
@@ -101,7 +99,7 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 
 #define st7735s_write_rawdata(pins_addr, data_addr, count) { \
     unsigned char *__data_addr = (unsigned char *)data_addr; \
-    st7735s_size_t __count = count; \
+    st7735s_size_t __count = (st7735s_size_t)count; \
     gpio_set_level((pins_addr)->DC, 1); \
     while (__count--) { \
         st7735s_write_byte(pins_addr, *(__data_addr++)); \
@@ -127,7 +125,6 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 
 #define st7735s_powerctl(pins_addr, state) \
     gpio_set_level((pins_addr)->VCC, state)
-
 
 #define st7735s_buffer_init(bufsize) { \
     .addr = (unsigned char *)malloc(bufsize), \
@@ -155,14 +152,69 @@ void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 }
 
 #define st7735s_buffer_free(buf_addr) { \
-    free((buf_addr)->addr); \
-    (buf_addr)->addr = NULL; \
-    (buf_addr)->offset = (buf_addr)->size = 0; \
+    if ((buf_addr) != NULL) { \
+        free((buf_addr)->addr); \
+        (buf_addr)->addr = NULL; \
+        (buf_addr)->offset = (buf_addr)->size = 0; \
+    } \
 }
 
 #define st7735s_set_SRAM_writable(pins_addr) \
     st7735s_write_command(pins_addr, ST7735S_RAMWR)
 
+
+typedef struct {
+    unsigned char x0,
+                  y0,
+                  x1,
+                  y1,
+                  _istemp;
+} st7735s_LineObject;
+
+#define st7735s_createLineObj(x0_, y0_, x1_, y1_) ({ \
+    st7735s_LineObject *__obj = (st7735s_LineObject *)malloc(sizeof(st7735s_LineObject)); \
+    __obj->x0 = x0_; \
+    __obj->y0 = y0_; \
+    __obj->x1 = x1_; \
+    __obj->y1 = y1_; \
+    __obj->_istemp = 0; \
+    __obj; \
+})
+
+#define st7735s_createTempLineObj(x0_, y0_, x1_, y1_) ({ \
+    st7735s_LineObject *__temp_obj = st7735s_createLineObj(x0_, y0_, x1_, y1_); \
+    __temp_obj->_istemp = 1; \
+    __temp_obj; \
+})
+
+#define st7735s_objAddrToType(obj_addr) \
+    __typeof__(*(obj_addr))
+
+#define st7735s_copyObj(sour_obj_addr, dest_obj_addr) { \
+    st7735s_size_t __sour_obj_size = sizeof(st7735s_objAddrToType(sour_obj_addr)); \
+    st7735s_objAddrToType(sour_obj_addr) *__souraddr = sour_obj_addr; \
+    dest_obj_addr = (st7735s_objAddrToType(sour_obj_addr) *)malloc(__sour_obj_size); \
+    st7735s_objAddrToType(sour_obj_addr) *__destaddr = dest_obj_addr; \
+    while (--__sour_obj_size) { \
+        *(__destaddr++) = *(__souraddr++); \
+    } \
+}
+
+#define st7735s_copyNotTempObj(sour_obj_addr, dest_obj_addr) { \
+    if (! (sour_obj_addr)->_istemp) { \
+        st7735s_copyObj(sour_obj_addr, dest_obj_addr); \
+    } \
+}
+
+#define st7735s_freeObj(obj_addr) { \
+    if ((obj_addr) != NULL) { \
+        free(obj_addr); \
+        obj_addr = NULL; \
+    } \
+}
+
+
+void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 void st7735s_set_window_addr(
         st7735s_pins *pins,
         unsigned char x1,
@@ -170,10 +222,9 @@ void st7735s_set_window_addr(
         unsigned char x2,
         unsigned char y2);
 void st7735s_hwreset(st7735s_pins *pins);
-void st7735s_draw_point(st7735s_pins *pins, unsigned char x, unsigned char y, unsigned short int color);
 void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color, st7735s_buffer *buffer);
+void st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color);
 void timesleep_ms(unsigned int ms);
-void st7735s_test_putchar(st7735s_pins *pins);
 
 /*
 File: ST7735S_DRIVER_H

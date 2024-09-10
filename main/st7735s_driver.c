@@ -135,49 +135,30 @@ st7735s_set_window_addr(
 }
 
 void
-st7735s_putchar(st7735s_pins *pins, unsigned char char_, unsigned short int color) {
-    unsigned char count;
-    for (count = 0; count < 8; ++count) {
-        if (char_ & 0x80) {
-            st7735s_write_color(pins, color);
-        } else {
-            st7735s_write_color(pins, 0x0000);
-        }
-        char_ <<= 1;
-    }
-}
-
-void
-st7735s_test_putchar(st7735s_pins *pins) {
-    unsigned char CHAR_A[] = {
-        0x00, 0x00, 
-        0x0e, 0x00, 
-        0x0e, 0x00, 
-        0x0b, 0x00, 
-        0x1b, 0x00, 
-        0x13, 0x00, 
-        0x11, 0x80, 
-        0x3f, 0x80, 
-        0x21, 0x80, 
-        0x20, 0xc0, 
-        0x60, 0xc0, 
-        0xf1, 0xe0, 
-        0x00, 0x00, 
-        0x00, 0x00, 
-        0x00, 0x00, 
-        0x00, 0x00
-    };
+st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color) {
+    st7735s_copyNotTempObj(line, line);
     st7735s_enable_transmit(pins);
-    st7735s_set_window_addr(pins, 16, 16, 32, 32);
-    st7735s_set_SRAM_writable(pins);
-
-    unsigned char count, *char_addr;
-    char_addr = CHAR_A;
-    for (count = 0; count < 32; ++count) {
-        st7735s_putchar(pins, *(char_addr++), 0xFFFF);
+    while (! ( ((line->x0) == (line->x1)) && ((line->y0) == (line->y1)) ) ) {
+        st7735s_set_window_addr(pins, line->x0, line->y0, line->x1, line->y1);
+        st7735s_set_SRAM_writable(pins);
+        st7735s_write_color(pins, color);
+        if ((line->x0) != (line->x1)) {
+            if ((line->x0) < (line->x1)) {
+                ++(line->x0);
+            } else {
+                --(line->x0);
+            }
+        }
+        if ((line->y0) != (line->y1)) {
+            if ((line->y0) < (line->y1)) {
+                ++(line->y0);
+            } else {
+                --(line->y0);
+            }
+        }
     }
-
     st7735s_disable_transmit(pins);
+    st7735s_freeObj(line);
 }
 
 void
@@ -187,6 +168,7 @@ st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int c
     st7735s_enable_transmit(pins);
     st7735s_set_window_addr(pins, 0, 0, (size->width), (size->height));
     st7735s_set_SRAM_writable(pins);
+
     for (x = 0; x < (size->width); ++x) {
         for (y = 0; y < (size->height); ++y) {
             if (buffer != NULL) {
@@ -199,6 +181,6 @@ st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int c
     if (buffer != NULL) {
         st7735s_buffer_commit(pins, buffer);
     }
+
     st7735s_disable_transmit(pins);
 }
-
