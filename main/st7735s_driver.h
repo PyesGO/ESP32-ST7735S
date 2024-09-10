@@ -213,6 +213,12 @@ typedef struct {
     } \
 }
 
+#define st7735s_swapVar(var1, var2) { \
+    var1 = var1 ^ var2; \
+    var2 = var1 ^ var2; \
+    var1 = var1 ^ var2; \
+}
+
 
 void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 void st7735s_set_window_addr(

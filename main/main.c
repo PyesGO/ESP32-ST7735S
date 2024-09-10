@@ -28,7 +28,11 @@ app_main(void) {
     st7735s_draw_line(&pins, line2, 0xFFFF);
     st7735s_freeObj(line1);
     st7735s_freeObj(line2);
-    timesleep_ms(6000);
+
+    st7735s_draw_line(&pins, st7735s_createTempLineObj(20, 50, 50, 50), 0xFFFF);
+    st7735s_draw_line(&pins, st7735s_createTempLineObj(50, 20, 50, 50), 0xFFFF);
+
+    timesleep_ms(8000);
 
     st7735s_blkctl(&pins, 0);
     st7735s_powerctl(&pins, 0);

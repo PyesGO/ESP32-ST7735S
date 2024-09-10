@@ -138,25 +138,26 @@ void
 st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color) {
     st7735s_copyNotTempObj(line, line);
     st7735s_enable_transmit(pins);
+
+    if ((line->x0) > (line->x1)) {
+        st7735s_swapVar(line->x0, line->x1);
+    }
+    if ((line->y0) > (line->y1)) {
+        st7735s_swapVar(line->y0, line->y1);
+    }
+
     while (! ( ((line->x0) == (line->x1)) && ((line->y0) == (line->y1)) ) ) {
         st7735s_set_window_addr(pins, line->x0, line->y0, line->x1, line->y1);
         st7735s_set_SRAM_writable(pins);
         st7735s_write_color(pins, color);
         if ((line->x0) != (line->x1)) {
-            if ((line->x0) < (line->x1)) {
-                ++(line->x0);
-            } else {
-                --(line->x0);
-            }
+            ++(line->x0);
         }
         if ((line->y0) != (line->y1)) {
-            if ((line->y0) < (line->y1)) {
-                ++(line->y0);
-            } else {
-                --(line->y0);
-            }
+            ++(line->y0);
         }
     }
+
     st7735s_disable_transmit(pins);
     st7735s_freeObj(line);
 }
