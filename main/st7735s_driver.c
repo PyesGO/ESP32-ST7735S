@@ -5,8 +5,6 @@
 // FreeRTOS Includes:
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-// Standard Includes:
-#include <stdio.h>
 
 static void
 pins_init(st7735s_pins *pins) {
@@ -137,15 +135,15 @@ st7735s_set_window_addr(
 void
 st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color) {
     st7735s_copyNotTempObj(line, line);
-    st7735s_enable_transmit(pins);
 
     if ((line->x0) > (line->x1)) {
-        st7735s_swapVar(line->x0, line->x1);
+        st7735s_swap_var(line->x0, line->x1);
     }
     if ((line->y0) > (line->y1)) {
-        st7735s_swapVar(line->y0, line->y1);
+        st7735s_swap_var(line->y0, line->y1);
     }
 
+    st7735s_enable_transmit(pins);
     while (! ( ((line->x0) == (line->x1)) && ((line->y0) == (line->y1)) ) ) {
         st7735s_set_window_addr(pins, line->x0, line->y0, line->x1, line->y1);
         st7735s_set_SRAM_writable(pins);
@@ -157,7 +155,6 @@ st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short i
             ++(line->y0);
         }
     }
-
     st7735s_disable_transmit(pins);
     st7735s_freeObj(line);
 }

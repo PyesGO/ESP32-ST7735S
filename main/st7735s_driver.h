@@ -213,10 +213,10 @@ typedef struct {
     } \
 }
 
-#define st7735s_swapVar(var1, var2) { \
-    var1 = var1 ^ var2; \
-    var2 = var1 ^ var2; \
-    var1 = var1 ^ var2; \
+#define st7735s_swap_var(var1, var2) { \
+    var1 = (var1) ^ (var2); \
+    var2 = (var1) ^ (var2); \
+    var1 = (var1) ^ (var2); \
 }
 
 
