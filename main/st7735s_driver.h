@@ -164,15 +164,32 @@ typedef struct {
 
 
 typedef struct {
-    unsigned char x0,
-                  y0,
-                  x1,
-                  y1,
+    unsigned char x0, y0,
+                  x1, y1,
                   _istemp;
 } st7735s_LineObject;
 
+typedef struct {
+    unsigned char x0, y0,
+                  x1, y1,
+                  length,
+                  width,
+                  _istemp;
+} st7735s_SquareObject;
+
+
+#define st7735s_createObj(obj) ({ \
+    (__typeof__(obj) *)malloc(sizeof(__typeof__(obj))); \
+})
+
+#define st7735s_createTempObj(obj, obj_creator) ({ \
+    __typeof__(obj) *__temp_obj = obj_creator; \
+    __temp_obj->_istemp = 1; \
+    __temp_obj; \
+})
+
 #define st7735s_createLineObj(x0_, y0_, x1_, y1_) ({ \
-    st7735s_LineObject *__obj = (st7735s_LineObject *)malloc(sizeof(st7735s_LineObject)); \
+    st7735s_LineObject *__obj = st7735s_createObj(st7735s_LineObject); \
     __obj->x0 = x0_; \
     __obj->y0 = y0_; \
     __obj->x1 = x1_; \
@@ -182,9 +199,23 @@ typedef struct {
 })
 
 #define st7735s_createTempLineObj(x0_, y0_, x1_, y1_) ({ \
-    st7735s_LineObject *__temp_obj = st7735s_createLineObj(x0_, y0_, x1_, y1_); \
-    __temp_obj->_istemp = 1; \
-    __temp_obj; \
+    st7735s_createTempObj(st7735s_LineObject, st7735s_createLineObj(x0_, y0_, x1_, y1_)); \
+})
+
+#define st7735s_createSquareObj(x_, y_, length_, width_) ({ \
+    st7735s_SquareObject *__obj = st7735s_createObj(st7735s_SquareObject); \
+    __obj->x0 = x_; \
+    __obj->y0 = y_; \
+    __obj->x1 = (x_) + (length_); \
+    __obj->y1 = (y_) + (width_); \
+    __obj->length = length_; \
+    __obj->width = width_; \
+    __obj->_istemp = 0; \
+    __obj; \
+})
+
+#define st7735s_createTempSquareObj(x_, y_, length_, width_) ({ \
+    st7735s_createTempObj(st7735s_SquareObject, st7735s_createSquareObj(x_, y_, length_, width_)); \
 })
 
 #define st7735s_objAddrToType(obj_addr) \
@@ -219,6 +250,11 @@ typedef struct {
     var1 = (var1) ^ (var2); \
 }
 
+#define st7735s_min(a, b) ({ \
+    __typeof__(a) __a = a; \
+    __typeof__(b) __b = b; \
+    (__a < __b) ? __a : __b; \
+})
 
 void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 void st7735s_set_window_addr(
@@ -230,6 +266,7 @@ void st7735s_set_window_addr(
 void st7735s_hwreset(st7735s_pins *pins);
 void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color, st7735s_buffer *buffer);
 void st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color);
+void st7735s_draw_square(st7735s_pins *pins, st7735s_SquareObject *square, unsigned short int color);
 void timesleep_ms(unsigned int ms);
 
 /*

@@ -72,7 +72,6 @@ void
 st7735s_init(st7735s_pins *pins, st7735s_size *size) {
     pins_init(pins);
     st7735s_powerctl(pins, 1);
-    timesleep_ms(120);
     st7735s_hwreset(pins);
 
     unsigned char command_list[] = {
@@ -142,7 +141,7 @@ st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short i
     if ((line->y0) > (line->y1)) {
         st7735s_swap_var(line->y0, line->y1);
     }
-
+    
     st7735s_enable_transmit(pins);
     while (! ( ((line->x0) == (line->x1)) && ((line->y0) == (line->y1)) ) ) {
         st7735s_set_window_addr(pins, line->x0, line->y0, line->x1, line->y1);
@@ -155,8 +154,54 @@ st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short i
             ++(line->y0);
         }
     }
+    st7735s_set_window_addr(pins, line->x1, line->y1, (line->x1) + 1, (line->y1) + 1);
+    st7735s_set_SRAM_writable(pins);
+    st7735s_write_color(pins, color);
     st7735s_disable_transmit(pins);
+
     st7735s_freeObj(line);
+}
+
+void
+st7735s_draw_square(st7735s_pins *pins, st7735s_SquareObject *square, unsigned short int color) {
+    st7735s_copyNotTempObj(square, square);
+    
+    st7735s_LineObject *lines[4] = {
+        st7735s_createLineObj(
+            square->x0,
+            square->y0,
+            square->x1,
+            square->y0
+        ),
+        st7735s_createLineObj(
+            square->x0,
+            square->y0,
+            square->x0,
+            square->y1
+        ),
+        st7735s_createLineObj(
+            square->x1,
+            square->y0,
+            square->x1,
+            square->y1
+        ),
+        st7735s_createLineObj(
+            square->x0,
+            square->y1,
+            square->x1,
+            square->y1
+        )
+    };
+
+    unsigned char offset;
+    st7735s_LineObject *current_line;
+    for (offset = 0; offset < 4; ++offset) {
+        current_line = *(lines + offset);
+        st7735s_draw_line(pins, current_line, color);
+        st7735s_freeObj(current_line);
+    }
+
+    st7735s_freeObj(square);
 }
 
 void
