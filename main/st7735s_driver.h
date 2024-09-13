@@ -198,9 +198,8 @@ typedef struct {
     __obj; \
 })
 
-#define st7735s_createTempLineObj(x0_, y0_, x1_, y1_) ({ \
-    st7735s_createTempObj(st7735s_LineObject, st7735s_createLineObj(x0_, y0_, x1_, y1_)); \
-})
+#define st7735s_createTempLineObj(x0_, y0_, x1_, y1_) \
+    st7735s_createTempObj(st7735s_LineObject, st7735s_createLineObj(x0_, y0_, x1_, y1_))
 
 #define st7735s_createSquareObj(x_, y_, length_, width_) ({ \
     st7735s_SquareObject *__obj = st7735s_createObj(st7735s_SquareObject); \
@@ -214,9 +213,8 @@ typedef struct {
     __obj; \
 })
 
-#define st7735s_createTempSquareObj(x_, y_, length_, width_) ({ \
-    st7735s_createTempObj(st7735s_SquareObject, st7735s_createSquareObj(x_, y_, length_, width_)); \
-})
+#define st7735s_createTempSquareObj(x_, y_, length_, width_) \
+    st7735s_createTempObj(st7735s_SquareObject, st7735s_createSquareObj(x_, y_, length_, width_))
 
 #define st7735s_objAddrToType(obj_addr) \
     __typeof__(*(obj_addr))
