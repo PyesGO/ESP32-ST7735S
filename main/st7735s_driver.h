@@ -250,12 +250,6 @@ typedef struct {
     var1 = (var1) ^ (var2); \
 }
 
-#define st7735s_min(a, b) ({ \
-    __typeof__(a) __a = a; \
-    __typeof__(b) __b = b; \
-    (__a < __b) ? __a : __b; \
-})
-
 void st7735s_init(st7735s_pins *pins, st7735s_size *size);
 void st7735s_set_window_addr(
         st7735s_pins *pins,
@@ -265,6 +259,13 @@ void st7735s_set_window_addr(
         unsigned char y2);
 void st7735s_hwreset(st7735s_pins *pins);
 void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color, st7735s_buffer *buffer);
+#define st7735s_draw_pixel(pins_addr, x, y, color) { \
+    st7735s_enable_transmit(pins_addr); \
+    st7735s_set_window_addr(pins_addr, x, y, x, y); \
+    st7735s_set_SRAM_writable(pins_addr); \
+    st7735s_write_color(pins_addr, color); \
+    st7735s_disable_transmit(pins_addr); \
+}
 void st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color);
 void st7735s_draw_square(st7735s_pins *pins, st7735s_SquareObject *square, unsigned short int color);
 void timesleep_ms(unsigned int ms);

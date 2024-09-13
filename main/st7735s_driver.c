@@ -120,11 +120,11 @@ st7735s_set_window_addr(
         2,
         ST7735S_CASET,
         4,
-        0x00, x0, 0x00, (x1 - 1),
+        0x00, x0, 0x00, (x0 == x1) ? x0 : (x1 - 1),
         0,
         ST7735S_RASET,
         4,
-        0x00, y0, 0x00, (y1 - 1),
+        0x00, y0, 0x00, (y0 == y1) ? y0 : (y1 - 1),
         0
     };
 
@@ -142,11 +142,8 @@ st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short i
         st7735s_swap_var(line->y0, line->y1);
     }
     
-    st7735s_enable_transmit(pins);
     while (! ( ((line->x0) == (line->x1)) && ((line->y0) == (line->y1)) ) ) {
-        st7735s_set_window_addr(pins, line->x0, line->y0, line->x1, line->y1);
-        st7735s_set_SRAM_writable(pins);
-        st7735s_write_color(pins, color);
+        st7735s_draw_pixel(pins, line->x0, line->y0, color);
         if ((line->x0) != (line->x1)) {
             ++(line->x0);
         }
@@ -154,11 +151,8 @@ st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short i
             ++(line->y0);
         }
     }
-    st7735s_set_window_addr(pins, line->x1, line->y1, (line->x1) + 1, (line->y1) + 1);
-    st7735s_set_SRAM_writable(pins);
-    st7735s_write_color(pins, color);
-    st7735s_disable_transmit(pins);
 
+    st7735s_draw_pixel(pins, line->x1, line->y1, color);
     st7735s_freeObj(line);
 }
 

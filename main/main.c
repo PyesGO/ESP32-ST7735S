@@ -32,9 +32,9 @@ app_main(void) {
     // st7735s_draw_line(&pins, st7735s_createTempLineObj(20, 50, 50, 50), 0xFFFF);
     // st7735s_draw_line(&pins, st7735s_createTempLineObj(50, 20, 50, 50), 0xFFFF);
 
-    st7735s_draw_square(&pins, st7735s_createTempSquareObj(20, 20, 20, 20), 0xFFFF);
-    st7735s_draw_square(&pins, st7735s_createTempSquareObj(20, 50, 30, 30), 0xEC64);
-    st7735s_draw_square(&pins, st7735s_createTempSquareObj(20, 90, 30, 20), 0xDA64);
+    st7735s_draw_square(&pins, st7735s_createTempSquareObj(20, 20, 20, 20), 0x6400);
+    st7735s_draw_square(&pins, st7735s_createTempSquareObj(20, 50, 30, 30), 0xFF00);
+    st7735s_draw_square(&pins, st7735s_createTempSquareObj(20, 90, 30, 20), 0xFC00);
 
     timesleep_ms(8000);
 
