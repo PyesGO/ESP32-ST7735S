@@ -3,6 +3,7 @@
 #include "driver/gpio.h"
 #include <stdlib.h>
 
+
 // System function command list:
 #define ST7735S_NOP 0x00
 #define ST7735S_SWRESET 0x01
@@ -64,6 +65,7 @@
 #define ST7735S_GMCTRN1 0xE1
 #define ST7735S_GCV 0xFC
 
+
 typedef unsigned short int st7735s_size_t;
 
 typedef struct {
@@ -79,6 +81,7 @@ typedef struct {
     unsigned char *addr;
     unsigned int size, offset;
 } st7735s_buffer;
+
 
 #define st7735s_write_byte(pins_addr, byte) { \
     unsigned char __count, __byte; \
@@ -163,18 +166,21 @@ typedef struct {
     st7735s_write_command(pins_addr, ST7735S_RAMWR)
 
 
+typedef unsigned char screen_size_t;
+
 typedef struct {
-    unsigned char x0, y0,
+    screen_size_t x0, y0,
                   x1, y1,
-                  _istemp;
+                  dx, dy;
+    unsigned char _istemp;
 } st7735s_LineObject;
 
 typedef struct {
-    unsigned char x0, y0,
+    screen_size_t x0, y0,
                   x1, y1,
                   length,
-                  width,
-                  _istemp;
+                  width;
+    unsigned char _istemp;
 } st7735s_SquareObject;
 
 
@@ -194,6 +200,8 @@ typedef struct {
     __obj->y0 = y0_; \
     __obj->x1 = x1_; \
     __obj->y1 = y1_; \
+    __obj->dx = ((x0_) < (x1_)) ? ((x1_) - (x0_)) : ((x0_) - (x1_)); \
+    __obj->dy = ((y0_) < (y1_)) ? ((y1_) - (y0_)) : ((y0_) - (y1_)); \
     __obj->_istemp = 0; \
     __obj; \
 })
@@ -216,14 +224,14 @@ typedef struct {
 #define st7735s_createTempSquareObj(x_, y_, length_, width_) \
     st7735s_createTempObj(st7735s_SquareObject, st7735s_createSquareObj(x_, y_, length_, width_))
 
-#define st7735s_objAddrToType(obj_addr) \
+#define st7735s_objaddr_to_type(obj_addr) \
     __typeof__(*(obj_addr))
 
 #define st7735s_copyObj(sour_obj_addr, dest_obj_addr) { \
-    st7735s_size_t __sour_obj_size = sizeof(st7735s_objAddrToType(sour_obj_addr)); \
-    st7735s_objAddrToType(sour_obj_addr) *__souraddr = sour_obj_addr; \
-    dest_obj_addr = (st7735s_objAddrToType(sour_obj_addr) *)malloc(__sour_obj_size); \
-    st7735s_objAddrToType(sour_obj_addr) *__destaddr = dest_obj_addr; \
+    st7735s_size_t __sour_obj_size = sizeof(st7735s_objaddr_to_type(sour_obj_addr)); \
+    st7735s_objaddr_to_type(sour_obj_addr) *__souraddr = sour_obj_addr; \
+    dest_obj_addr = (st7735s_objaddr_to_type(sour_obj_addr) *)malloc(__sour_obj_size); \
+    st7735s_objaddr_to_type(sour_obj_addr) *__destaddr = dest_obj_addr; \
     while (--__sour_obj_size) { \
         *(__destaddr++) = *(__souraddr++); \
     } \
@@ -249,12 +257,21 @@ typedef struct {
 }
 
 void st7735s_init(st7735s_pins *pins, st7735s_size *size);
-void st7735s_set_window_addr(
-        st7735s_pins *pins,
-        unsigned char x1,
-        unsigned char y1,
-        unsigned char x2,
-        unsigned char y2);
+void st7735s_cmdlist_helper(st7735s_pins *pins, unsigned char *cmd_list);
+#define st7735s_set_window_addr(pins_addr, x0, y0, x1, y1) { \
+    unsigned char __cmd_list[] = { \
+        2, \
+        ST7735S_CASET, \
+        4, \
+        0x00, x0, 0x00, ((x0) == (x1)) ? (x0) : ((x1) - 1), \
+        0, \
+        ST7735S_RASET, \
+        4, \
+        0x00, y0, 0x00, ((y0) == (y1)) ? (y0) : ((y1) - 1), \
+        0 \
+    }; \
+    st7735s_cmdlist_helper(pins_addr, __cmd_list); \
+}
 void st7735s_hwreset(st7735s_pins *pins);
 void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color, st7735s_buffer *buffer);
 #define st7735s_draw_pixel(pins_addr, x, y, color) { \

@@ -25,8 +25,8 @@ pins_init(st7735s_pins *pins) {
     }; gpio_config(&conf);
 }
 
-static void
-cmd_list_helper(st7735s_pins *pins, unsigned char *cmd_list) {
+void
+st7735s_cmdlist_helper(st7735s_pins *pins, unsigned char *cmd_list) {
     unsigned char num_commands,
                   num_args,
                   delayms,
@@ -104,55 +104,53 @@ st7735s_init(st7735s_pins *pins, st7735s_size *size) {
     };
     
     st7735s_enable_transmit(pins);
-    cmd_list_helper(pins, command_list);
+    st7735s_cmdlist_helper(pins, command_list);
     st7735s_disable_transmit(pins);
-}
-
-void
-st7735s_set_window_addr(
-        st7735s_pins *pins,
-        unsigned char x0,
-        unsigned char y0,
-        unsigned char x1,
-        unsigned char y1) {
-
-    unsigned char cmd_list[] = {
-        2,
-        ST7735S_CASET,
-        4,
-        0x00, x0, 0x00, (x0 == x1) ? x0 : (x1 - 1),
-        0,
-        ST7735S_RASET,
-        4,
-        0x00, y0, 0x00, (y0 == y1) ? y0 : (y1 - 1),
-        0
-    };
-
-    cmd_list_helper(pins, cmd_list);
 }
 
 void
 st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color) {
     st7735s_copyNotTempObj(line, line);
 
-    if ((line->x0) > (line->x1)) {
-        st7735s_swap_var(line->x0, line->x1);
+    signed short int judge_sign;
+    signed char step_number;
+    screen_size_t *x0_addr, *y0_addr;
+
+    step_number = 1;
+    if ( ((line->x0) < (line->x1)) && ((line->y0) > (line->y1)) ) {
+        step_number = -step_number;
     }
-    if ((line->y0) > (line->y1)) {
+    else if ( ((line->x0) > (line->x1)) && ((line->y0) > (line->y1)) ) {
+        st7735s_swap_var(line->x0, line->x1);
         st7735s_swap_var(line->y0, line->y1);
     }
-    
-    while (! ( ((line->x0) == (line->x1)) && ((line->y0) == (line->y1)) ) ) {
-        st7735s_draw_pixel(pins, line->x0, line->y0, color);
-        if ((line->x0) != (line->x1)) {
-            ++(line->x0);
-        }
-        if ((line->y0) != (line->y1)) {
-            ++(line->y0);
+    else if ( ((line->x0) > (line->x1)) && ((line->y0) < (line->y1)) ) {
+        st7735s_swap_var(line->x0, line->x1);
+        st7735s_swap_var(line->y0, line->y1);
+        step_number = -step_number;
+    }
+
+    if ((line->dx) < (line->dy)) {
+        x0_addr = &(line->y0);
+        y0_addr = &(line->x0);
+        st7735s_swap_var(line->dx, line->dy);
+        st7735s_swap_var(line->x0, line->y0);
+        st7735s_swap_var(line->x1, line->y1);
+    } else {
+        x0_addr = &(line->x0);
+        y0_addr = &(line->y0);
+    }
+
+    judge_sign = -(line->dx);
+    for (; (line->x0) <= (line->x1); ++(line->x0)) {
+        st7735s_draw_pixel(pins, *x0_addr, *y0_addr, color);
+        judge_sign += ((line->dy) << 1);
+        if (judge_sign > 0) {
+            (line->y0) += step_number;
+            judge_sign -= ((line->dx) << 1);
         }
     }
 
-    st7735s_draw_pixel(pins, line->x1, line->y1, color);
     st7735s_freeObj(line);
 }
 

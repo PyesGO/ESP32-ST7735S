@@ -1,3 +1,6 @@
 CompileFlags:
-  Add: [-xc, -Wall]
+  Add: [-xc, -Wall, --sysroot=/home/yjtfx/Personal-Data/programs/xtensa-esp-elf/xtensa-esp-elf]
   Remove: [-fno-tree-switch-conversion, -fstrict-volatile-bitfields, -fno-shrink-wrap]
+
+Diagnostics:
+  UnusedIncludes: None
