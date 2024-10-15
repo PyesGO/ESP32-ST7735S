@@ -1,5 +1,7 @@
 #pragma once
 
+#include "st7735s_ext_pins.h"
+
 #include "driver/gpio.h"
 #include <stdlib.h>
 
@@ -8,8 +10,7 @@
 #define ST7735S_NOP 0x00
 #define ST7735S_SWRESET 0x01
 #define ST7735S_RDDID 0x04
-#define ST7735S_RDDST 0x09
-#define ST7735S_RDDPM 0x0A
+#define ST7735S_RDDST 0x09 #define ST7735S_RDDPM 0x0A
 #define ST7735S_RDDMADCTL 0x0B
 #define ST7735S_RDDCOLMOD 0x0C
 #define ST7735S_RDDIM 0x0D
@@ -69,7 +70,7 @@
 typedef unsigned short int st7735s_size_t;
 
 typedef struct {
-    unsigned char VCC, SCL, SDA, RES, DC, CS, BLK;
+    unsigned char SCL, SDA, RES, DC, CS;
 } st7735s_pins;
 static const unsigned char ST7735S_PINS_NUM = sizeof(st7735s_pins);
 
@@ -123,11 +124,15 @@ typedef struct {
 #define st7735s_disable_transmit(pins_addr) \
     gpio_set_level((pins_addr)->CS, 1)
 
-#define st7735s_blkctl(pins_addr, state) \
-    gpio_set_level((pins_addr)->BLK, state)
+#ifdef BLK_PIN
+#define st7735s_blkctl(state) \
+    gpio_set_level(BLK_PIN, state)
+#endif
 
-#define st7735s_powerctl(pins_addr, state) \
-    gpio_set_level((pins_addr)->VCC, state)
+#ifdef VCC_PIN
+#define st7735s_powerctl(state) \
+    gpio_set_level(VCC_PIN, state)
+#endif
 
 #define st7735s_buffer_init(bufsize) { \
     .addr = (unsigned char *)malloc(bufsize), \
@@ -281,7 +286,15 @@ void st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short 
     st7735s_write_color(pins_addr, color); \
     st7735s_disable_transmit(pins_addr); \
 }
-void st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color);
+void st7735s_draw_non_slope_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color);
+void st7735s_draw_slope_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color);
+#define st7735s_draw_line(pins_addr, line_obj_addr, color) { \
+    if ( (((line_obj_addr)->x0) == ((line_obj_addr)->x1)) || (((line_obj_addr)->y0) == ((line_obj_addr)->y1)) ) { \
+        st7735s_draw_non_slope_line(pins_addr, line_obj_addr, color); \
+    } else { \
+        st7735s_draw_slope_line(pins_addr, line_obj_addr, color); \
+    } \
+}
 void st7735s_draw_square(st7735s_pins *pins, st7735s_SquareObject *square, unsigned short int color);
 void timesleep_ms(unsigned int ms);
 

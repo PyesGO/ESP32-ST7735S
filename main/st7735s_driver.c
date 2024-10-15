@@ -5,6 +5,7 @@
 // FreeRTOS Includes:
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "hal/gpio_types.h"
 
 static void
 pins_init(st7735s_pins *pins) {
@@ -13,8 +14,17 @@ pins_init(st7735s_pins *pins) {
 
     pins_ptr = (unsigned char *)pins;
     pins_mask = 0;
-    for (count = 0; count < ST7735S_PINS_NUM; ++count)
+    for (count = 0; count < ST7735S_PINS_NUM; ++count) {
         pins_mask |= 1ULL << *(pins_ptr++);
+    }
+
+    #ifdef BLK_PIN
+    pins_mask |= 1ULL << BLK_PIN;
+    #endif
+
+    #ifdef VCC_PIN
+    pins_mask |= 1ULL << VCC_PIN;
+    #endif
 
     gpio_config_t conf = {
         .mode = GPIO_MODE_OUTPUT,
@@ -71,7 +81,6 @@ st7735s_hwreset(st7735s_pins *pins) {
 void
 st7735s_init(st7735s_pins *pins, st7735s_size *size) {
     pins_init(pins);
-    st7735s_powerctl(pins, 1);
     st7735s_hwreset(pins);
 
     unsigned char command_list[] = {
@@ -109,7 +118,7 @@ st7735s_init(st7735s_pins *pins, st7735s_size *size) {
 }
 
 void
-st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color) {
+st7735s_draw_slope_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color) {
     st7735s_copyNotTempObj(line, line);
 
     signed short int judge_sign;
@@ -155,42 +164,43 @@ st7735s_draw_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short i
 }
 
 void
+st7735s_draw_non_slope_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned short int color) {
+    st7735s_copyNotTempObj(line, line);
+
+    if ((line->x0) > (line->x1)) {
+        st7735s_swap_var(line->x0, line->x1);
+    }
+    else if ((line->y0) > (line->y1)) {
+        st7735s_swap_var(line->y0, line->y1);
+    }
+
+    for (; (line->x0) < (line->x1); ++(line->x0)) {
+        st7735s_draw_pixel(pins, line->x0, line->y0, color);
+    }
+    for (; (line->y0) < (line->y1); ++(line->y0)) {
+        st7735s_draw_pixel(pins, line->x0, line->y0, color);
+    }
+
+    st7735s_draw_pixel(pins, line->x1, line->y1, color);
+    st7735s_freeObj(line);
+}
+
+void
 st7735s_draw_square(st7735s_pins *pins, st7735s_SquareObject *square, unsigned short int color) {
     st7735s_copyNotTempObj(square, square);
     
     st7735s_LineObject *lines[4] = {
-        st7735s_createLineObj(
-            square->x0,
-            square->y0,
-            square->x1,
-            square->y0
-        ),
-        st7735s_createLineObj(
-            square->x0,
-            square->y0,
-            square->x0,
-            square->y1
-        ),
-        st7735s_createLineObj(
-            square->x1,
-            square->y0,
-            square->x1,
-            square->y1
-        ),
-        st7735s_createLineObj(
-            square->x0,
-            square->y1,
-            square->x1,
-            square->y1
-        )
+        st7735s_createTempLineObj(square->x0, square->y0, square->x1, square->y0),
+        st7735s_createTempLineObj(square->x0, square->y0, square->x0, square->y1),
+        st7735s_createTempLineObj(square->x0, square->y1, square->x1, square->y1),
+        st7735s_createTempLineObj(square->x1, square->y0, square->x1, square->y1)
     };
 
     unsigned char offset;
-    st7735s_LineObject *current_line;
+    st7735s_LineObject *line;
     for (offset = 0; offset < 4; ++offset) {
-        current_line = *(lines + offset);
-        st7735s_draw_line(pins, current_line, color);
-        st7735s_freeObj(current_line);
+        line = *(lines + offset);
+        st7735s_draw_non_slope_line(pins, line, color);
     }
 
     st7735s_freeObj(square);
