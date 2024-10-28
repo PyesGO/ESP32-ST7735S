@@ -123,7 +123,7 @@ st7735s_draw_slope_line(st7735s_pins *pins, st7735s_LineObject *line, unsigned s
 
     signed short int judge_sign;
     signed char step_number;
-    screen_size_t *x0_addr, *y0_addr;
+    st7735s_screen_size_t *x0_addr, *y0_addr;
 
     step_number = 1;
     if ( ((line->x0) < (line->x1)) && ((line->y0) > (line->y1)) ) {
@@ -188,7 +188,7 @@ st7735s_draw_non_slope_line(st7735s_pins *pins, st7735s_LineObject *line, unsign
 void
 st7735s_draw_square(st7735s_pins *pins, st7735s_SquareObject *square, unsigned short int color) {
     st7735s_copyNotTempObj(square, square);
-    
+
     st7735s_LineObject *lines[4] = {
         st7735s_createTempLineObj(square->x0, square->y0, square->x1, square->y0),
         st7735s_createTempLineObj(square->x0, square->y0, square->x0, square->y1),
@@ -207,24 +207,29 @@ st7735s_draw_square(st7735s_pins *pins, st7735s_SquareObject *square, unsigned s
 }
 
 void
-st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color, st7735s_buffer *buffer) {
+st7735s_test(st7735s_pins *pins, st7735s_LineObject *line) {
+    st7735s_copyNotTempObj(line, line);
+    printf("in function (copy after): x0: %u, x1: %u, y0: %u, y1:%u\n", line->x0, line->x1, line->y0, line->y1);
+    line->x0 = 100;
+    line->x1 = 150;
+    line->y0 = 200;
+    line->y1 = 250;
+    printf("in function (copy after & modified): x0: %u, x1: %u, y0: %u, y1:%u\n", line->x0, line->x1, line->y0, line->y1);
+    st7735s_freeObj(line);
+}
+
+void
+st7735s_fill_screen(st7735s_pins *pins, st7735s_size *size, unsigned short int color) {
     unsigned char x, y;
 
     st7735s_enable_transmit(pins);
-    st7735s_set_window_addr(pins, 0, 0, (size->width), (size->height));
+    st7735s_set_window_addr(pins, 3, 3, (size->width), (size->height));
     st7735s_set_SRAM_writable(pins);
 
-    for (x = 0; x < (size->width); ++x) {
-        for (y = 0; y < (size->height); ++y) {
-            if (buffer != NULL) {
-                st7735s_buffer_write(pins, buffer, color);
-            } else {
-                st7735s_write_color(pins, color);
-            }
+    for (x = 3; x <= (size->width); ++x) {
+        for (y = 3; y <= (size->height); ++y) {
+            st7735s_write_color(pins, color);
         }
-    }
-    if (buffer != NULL) {
-        st7735s_buffer_commit(pins, buffer);
     }
 
     st7735s_disable_transmit(pins);
