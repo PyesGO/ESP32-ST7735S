@@ -78,7 +78,7 @@ st7735s_hwreset(st7735s_pins *pins) {
 }
 
 void
-st7735s_initScreen(st7735s_Screen *screen) {
+st7735s_initScreenState(st7735s_Screen *screen) {
     pins_init(screen->pins);
     st7735s_hwreset(screen->pins);
 

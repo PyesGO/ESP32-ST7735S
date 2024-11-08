@@ -4,12 +4,12 @@
 void
 app_main(void) {
     st7735s_Screen *screen;
+
     screen = st7735s_createScreenObj();
     st7735s_initScreenPins(screen, 15, 2, 4, 16, 17);
     st7735s_initScreenSize(screen, 3, 3, 128, 128);
 
-    st7735s_initScreen(screen);
-
+    st7735s_initScreenState(screen);
     st7735s_blkctl(0);
     st7735s_fill_screen(screen, 0x0000);
     st7735s_blkctl(1);
@@ -21,6 +21,5 @@ app_main(void) {
     st7735s_freeScreenObj(screen);
 
     timesleep_ms(30000);
-
     st7735s_blkctl(0);
 }

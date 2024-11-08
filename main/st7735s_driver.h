@@ -170,7 +170,7 @@ typedef struct {
 }
 
 
-void st7735s_initScreen(st7735s_Screen *screen);
+void st7735s_initScreenState(st7735s_Screen *screen);
 void st7735s_cmdlist_helper(st7735s_pins *pins, unsigned char *cmd_list);
 #define st7735s_set_window_addr(screen_obj_addr, x0, y0, x1, y1) { \
     st7735s_Screen *__screen_addr; \
