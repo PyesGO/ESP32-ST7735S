@@ -3,32 +3,22 @@
 
 void
 app_main(void) {
-    st7735s_pins pins = {
-        .SCL = 15,
-        .SDA = 2,
-        .RES = 4,
-        .DC = 16,
-        .CS = 17
-    };
-    st7735s_size size = {
-        .width = 132,
-        .height = 132
-    };
+    st7735s_Screen *screen;
+    screen = st7735s_createScreenObj();
+    st7735s_initScreenPins(screen, 15, 2, 4, 16, 17);
+    st7735s_initScreenSize(screen, 3, 3, 128, 128);
 
-    st7735s_init(&pins, &size);
+    st7735s_initScreen(screen);
+
     st7735s_blkctl(0);
-    st7735s_fill_screen(&pins, &size, 0x0000);
+    st7735s_fill_screen(screen, 0x0000);
     st7735s_blkctl(1);
-    
-    st7735s_LineObject *line1 = st7735s_createLineObj(10, 20, 30, 40);
 
-    st7735s_test(&pins, line1);
+    st7735s_draw_slope_line(screen, st7735s_createTempLineObj(20, 0, 40, 50), 0xFFFF);
+    st7735s_draw_square(screen, st7735s_createTempSquareObj(20, 30, 40, 20), 0xFFFF);
+    st7735s_font_write_text(screen, 4, 0xFFFF);
 
-    printf("main: x0: %u, x1: %u, y0: %u, y1:%u\n", line1->x0, line1->x1, line1->y0, line1->y1);
-
-    st7735s_freeObj(line1);
-
-    st7735s_font_write_text(&pins, 0, 0xFFFF);
+    st7735s_freeScreenObj(screen);
 
     timesleep_ms(30000);
 
