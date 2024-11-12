@@ -10,7 +10,7 @@ typedef unsigned short int softSPI_maxTransmissionSize_t;
 
 #define softSPI_write_byte(pins_addr, byte) { \
     unsigned char __count, __byte; \
-    __byte = (unsigned char)byte; \
+    __byte = (unsigned char)(byte); \
     for (__count = 0; __count < 8; ++__count) { \
         gpio_set_level((pins_addr)->SCL, 0); \
         gpio_set_level((pins_addr)->SDA, __byte & 0x80); \
@@ -20,14 +20,14 @@ typedef unsigned short int softSPI_maxTransmissionSize_t;
 }
 
 #define softSPI_write_command(pins_addr, command) { \
-    unsigned char __command = (unsigned char)command; \
+    unsigned char __command = (unsigned char)(command); \
     gpio_set_level((pins_addr)->DC, 0); \
     softSPI_write_byte(pins_addr, __command); \
 }
 
 #define softSPI_write_rawdata(pins_addr, data_addr, count) { \
-    unsigned char *__data_addr = (unsigned char *)data_addr; \
-    softSPI_maxTransmissionSize_t __count = (softSPI_maxTransmissionSize_t)count; \
+    unsigned char *__data_addr = (unsigned char *)(data_addr); \
+    softSPI_maxTransmissionSize_t __count = (softSPI_maxTransmissionSize_t)(count); \
     gpio_set_level((pins_addr)->DC, 1); \
     while (__count--) { \
         softSPI_write_byte(pins_addr, *(__data_addr++)); \

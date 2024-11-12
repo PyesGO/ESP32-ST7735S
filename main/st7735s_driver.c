@@ -1,5 +1,5 @@
 #include "st7735s_driver.h"
-#include "softSPI_lib.h"
+#include "softSPI.h"
 
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
@@ -206,7 +206,27 @@ st7735s_draw_square(st7735s_Screen *screen, st7735s_SquareObject *square, unsign
 }
 
 void
-st7735s_fill_screen(st7735s_Screen *screen, unsigned short int color) {
+st7735s_fill_square(st7735s_Screen *screen, st7735s_SquareObject *square, unsigned short int color) {
+    st7735s_copyNotTempObj(square, square);
+
+    softSPI_enable_transmit(screen->pins);
+
+    st7735s_set_window_addr(screen, square->x0, square->y0, square->x1, square->y1);
+    st7735s_set_SRAM_writable(screen->pins);
+
+    while ((square->length)--) {
+        while ((square->width)--) {
+            softSPI_write_color(screen->pins, color);
+        }
+    }
+
+    softSPI_disable_transmit(screen->pins);
+
+    st7735s_freeObj(square);
+}
+
+void
+st7735s_full_screen(st7735s_Screen *screen, unsigned short int color) {
     st7735s_screenMaxSize_t x_start, y_start;
 
     x_start = screen->size->x_start;

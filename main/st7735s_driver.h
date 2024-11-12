@@ -2,7 +2,7 @@
 
 #include "st7735s_ext_pins.h"
 #include "st7735s_cmds.h"
-#include "softSPI_lib.h"
+#include "softSPI.h"
 #include "compare_helper.h"
 
 #include "driver/gpio.h"
@@ -143,12 +143,17 @@ typedef struct {
     *(__destaddr) = (st7735s_objaddr_to_type(__souraddr) *)malloc(sizeof(st7735s_objaddr_to_type(__souraddr))); \
     __destaddr_byte = (unsigned char *)(*(__destaddr)); \
     __destaddr_4bytes = (unsigned int *)(*(__destaddr)); \
-    while (__sour_split_4bytes_count--) { \
-        *(__destaddr_4bytes++) = *(__souraddr_4bytes++); \
-    } \
     __sour_split_byte_count -= __sour_split_4bytes_count << 2; \
     __souraddr_byte += __sour_split_4bytes_count << 2; \
     __destaddr_byte += __sour_split_4bytes_count << 2; \
+    while (__sour_split_4bytes_count--) { \
+        *(__destaddr_4bytes++) = *(__souraddr_4bytes++); \
+    } \
+    printf("__destaddr_4bytes: %p, __souraddr_4bytes: %p\n", __destaddr_4bytes, __souraddr_4bytes); \
+    printf("__destaddr_byte: %p, __souraddr_byte: %p\n", __destaddr_byte, __souraddr_byte); \
+    printf("copyObj: __sour_split_4bytes_count: %u\n", __sour_split_4bytes_count); \
+    printf("copyObj: __sour_split_4bytes_count << 2: %u\n", __sour_split_4bytes_count << 2); \
+    printf("copyObj: __sour_split_byte_count: %u\n", __sour_split_byte_count); \
     while (__sour_split_byte_count--) { \
         *(__destaddr_byte++) = *(__souraddr_byte++); \
     } \
@@ -195,7 +200,7 @@ void st7735s_cmdlist_helper(st7735s_pins *pins, unsigned char *cmd_list);
     st7735s_cmdlist_helper(__screen_addr->pins, __cmd_list); \
 }
 void st7735s_hwreset(st7735s_pins *pins);
-void st7735s_fill_screen(st7735s_Screen *screen, unsigned short int color);
+void st7735s_full_screen(st7735s_Screen *screen, unsigned short int color);
 #define st7735s_draw_pixel(screen_obj_addr, x, y, color) { \
     st7735s_Screen *__screen; \
     st7735s_screenMaxSize_t __x, __y; \
@@ -211,6 +216,7 @@ void st7735s_fill_screen(st7735s_Screen *screen, unsigned short int color);
 void st7735s_draw_non_slope_line(st7735s_Screen *screen, st7735s_LineObject *line, unsigned short int color);
 void st7735s_draw_slope_line(st7735s_Screen *screen, st7735s_LineObject *line, unsigned short int color);
 void st7735s_draw_square(st7735s_Screen *screen, st7735s_SquareObject *square, unsigned short int color);
+void st7735s_fill_square(st7735s_Screen *screen, st7735s_SquareObject *square, unsigned short int color);
 void timesleep_ms(unsigned int ms);
 
 /*
