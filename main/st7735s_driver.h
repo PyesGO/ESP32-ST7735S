@@ -149,11 +149,6 @@ typedef struct {
     while (__sour_split_4bytes_count--) { \
         *(__destaddr_4bytes++) = *(__souraddr_4bytes++); \
     } \
-    printf("__destaddr_4bytes: %p, __souraddr_4bytes: %p\n", __destaddr_4bytes, __souraddr_4bytes); \
-    printf("__destaddr_byte: %p, __souraddr_byte: %p\n", __destaddr_byte, __souraddr_byte); \
-    printf("copyObj: __sour_split_4bytes_count: %u\n", __sour_split_4bytes_count); \
-    printf("copyObj: __sour_split_4bytes_count << 2: %u\n", __sour_split_4bytes_count << 2); \
-    printf("copyObj: __sour_split_byte_count: %u\n", __sour_split_byte_count); \
     while (__sour_split_byte_count--) { \
         *(__destaddr_byte++) = *(__souraddr_byte++); \
     } \

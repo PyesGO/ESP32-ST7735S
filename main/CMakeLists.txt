@@ -1,8 +1,8 @@
 idf_component_register(
     SRCS 
     "main.c"
-    "st7735s_driver.c"
-    "st7735s_font.c"
+    "dht22_driver.c"
+    "driver_common.c"
     INCLUDE_DIRS
     "."
 )
